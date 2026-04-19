@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 import { RecentActivities } from '@/components/dashboard/RecentActivities'
 import { Activity } from '@/lib/llm/types'
 
@@ -19,11 +21,12 @@ export default async function DashboardPage() {
     .order('recorded_at', { ascending: false })
     .limit(10)
 
-  // Fetch goals (just grabbing the first one for now as MVP)
+  // Fetch goals
   const { data: goals } = await supabase
     .from('goals')
     .select('*')
     .eq('user_id', session.user.id)
+    .order('created_at', { ascending: false })
     .limit(1)
 
   const currentGoal = goals?.[0]
@@ -36,9 +39,17 @@ export default async function DashboardPage() {
           <p className="text-gray-500">Welcome back! Here's your current progress.</p>
         </header>
 
-        {/* Goal Progress Section (Mocked for now) */}
+        {/* Goal Progress Section */}
         <section className="bg-gray-50 border rounded-xl p-6 space-y-4">
-          <h2 className="text-xl font-semibold">Current Goal</h2>
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">Current Goal</h2>
+            {!currentGoal && (
+              <Link href="/goals/new">
+                <Button size="sm">Set New Goal</Button>
+              </Link>
+            )}
+          </div>
+          
           {currentGoal ? (
             <div className="space-y-2">
               <div className="flex justify-between text-sm font-medium">
