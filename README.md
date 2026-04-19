@@ -1,369 +1,93 @@
-# 🏃 AI 운동 코치 앱 — 프로젝트 청사진
+# Stride: AI Fitness Coach
 
-> 자연어 채팅으로 운동을 기록하고, AI가 훈련 계획까지 짜주는 퍼스널 피트니스 앱.
-
----
-
-## 1. 프로젝트 개요
-
-### 한 줄 정의
-"귀찮은 운동 기록을 대화로 퉁치고, AI가 다음 훈련까지 알아서 짜준다."
-
-### 핵심 문제
-- 운동 앱의 입력 UX가 복잡해서 기록 자체가 귀찮음
-- 데이터는 쌓이는데 "그래서 다음에 뭘 해야 해?"라는 질문에 답을 못 줌
-- 기존 데이터(구글 시트, Notion, CSV)가 이미 있는데 옮기기 어려움
-
-### 해결 방식
-1. **입력:** 채팅으로 자연어 기록 → AI가 구조화 데이터로 파싱
-2. **분석:** 누적 데이터 기반 AI 코칭 피드백 자동 생성
-3. **계획:** 목표 기반 훈련 계획 자동 생성 및 주기적 업데이트
-
-### 확장 비전 (Vision)
-- **범용 목표 달성 앱으로의 확장:** 시작은 "달리기"와 같은 피트니스 영역(MVP)에서 출발하지만, 궁극적으로는 **독서(예: 올해 책 10권 읽기), 다이어트, 어학 공부 등 모든 종류의 목표를 관리하고 코칭해 주는 범용 AI 코치**로 확장하는 것을 목표로 함.
-- **유연한 아키텍처:** 이를 위해 DB 스키마에 종목별 고정 컬럼을 두지 않고 `JSONB`를 활용하며, 복잡한 계산 로직 대신 LLM의 추론 능력을 극대화하는 유연한 구조를 채택.
+> A personal fitness app that logs workouts via natural language chat and generates AI-driven training plans.
 
 ---
 
-## 2. 목표 & 현재 상태
+## 1. Overview
 
-### 사용자 목표 (Phase 1 기준)
-| 종목 | 목표 | 상태 |
-|------|------|------|
-| 달리기 | 10km 49분 진입 | 진행 중 |
-| 달리기 | 3km 11분 진입 | 진행 중 |
-| 턱걸이 | TBD | Phase 2 예정 |
+### Core Concept
+"Log your workouts simply by chatting, and let AI build your next training schedule."
 
-> **목표 데이터 구조는 유연하게** — 종목마다 다른 형태의 목표를 가질 수 있음 (시간, 개수, 볼륨 등)
+### The Problem
+- Manual data entry in fitness apps is tedious.
+- Accumulated data rarely answers the question: "What should I do next?"
+- Migrating existing data (Google Sheets, Notion, CSV) is difficult.
 
----
+### The Solution
+1. **Input:** Natural language chat → AI parses it into structured data.
+2. **Analysis:** AI generates coaching feedback based on your history.
+3. **Plan:** AI generates and automatically updates a weekly training plan based on your goal.
 
-## 3. 기술 스택
-
-| 영역 | 기술 | 비고 |
-|------|------|------|
-| 프론트엔드 | Next.js 14 (App Router) | React Server Components 활용 |
-| 스타일링 | TailwindCSS | |
-| 상태 관리 | Zustand | 클라이언트 상태 최소화 |
-| 백엔드 | Next.js Server Actions / API Routes | BFF 역할 |
-| DB | Supabase (PostgreSQL) | RLS 필수 적용 |
-| 인증 | Supabase Auth | 소셜 로그인 (Google 등) |
-| AI | Gemini API (기본) | **추상화 레이어 필수 — 모델 교체 가능** |
-| 배포 | Vercel | |
-| 백그라운드 작업 | Inngest 또는 QStash | 비동기 데이터 동기화 |
-
-### LLM 추상화 레이어 (중요)
-LLM은 인터페이스로 추상화하여 Gemini, Claude, OpenAI 등으로 갈아끼울 수 있어야 함.
-
-```typescript
-// lib/llm/types.ts
-interface LLMProvider {
-  parse(prompt: string, schema: JSONSchema): Promise<ParsedActivity>
-  chat(messages: Message[], context: UserContext): Promise<CoachResponse>
-  generatePlan(goal: Goal, history: Activity[]): Promise<TrainingPlan>
-}
-
-// lib/llm/providers/gemini.ts  → GeminiProvider implements LLMProvider
-// lib/llm/providers/claude.ts  → ClaudeProvider implements LLMProvider
-// lib/llm/providers/openai.ts  → OpenAIProvider implements LLMProvider
-
-// lib/llm/index.ts
-// 환경변수로 provider 선택: LLM_PROVIDER=gemini | claude | openai
-export const llm: LLMProvider = createProvider(process.env.LLM_PROVIDER)
-```
+### Vision for Expansion
+- **General Goal Achievement:** While the MVP focuses on running, the ultimate vision is a general AI coach for any goal (e.g., reading 10 books, studying, dieting).
+- **Flexible Architecture:** To support this, the database uses schema-less `JSONB` columns for metrics, relying on the LLM's reasoning capabilities rather than hardcoded logic.
 
 ---
 
-## 4. DB 스키마 설계 (Supabase / PostgreSQL)
+## 2. Tech Stack
 
-### 설계 원칙
-- **종목별 고정 스키마 없음** — `metrics` 컬럼을 JSONB로 두어 종목마다 다른 필드를 자유롭게 저장
-- **멀티유저 구조로 시작** — 현재 1인용이지만 퍼블릭 서비스 확장을 고려해 처음부터 `user_id` 포함
-- **RLS 필수** — `auth.uid() = user_id` 조건으로 DB 레벨에서 데이터 격리
-
-### 테이블 구조
-
-```sql
--- 사용자 목표
-CREATE TABLE goals (
-  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id       UUID REFERENCES auth.users NOT NULL,
-  activity_type TEXT NOT NULL,          -- 'running', 'pullup', 등 자유 문자열
-  title         TEXT NOT NULL,          -- "10km 49분 진입"
-  target        JSONB NOT NULL,         -- { "distance_km": 10, "time_min": 49 }
-  deadline      DATE,
-  achieved_at   TIMESTAMPTZ,
-  created_at    TIMESTAMPTZ DEFAULT now()
-);
-
--- 운동 기록 (핵심 테이블)
-CREATE TABLE activities (
-  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id       UUID REFERENCES auth.users NOT NULL,
-  activity_type TEXT NOT NULL,          -- 'running', 'pullup', 등
-  recorded_at   TIMESTAMPTZ NOT NULL,   -- 실제 운동 시각
-  raw_input     TEXT,                   -- 사용자가 입력한 원문 (파싱 검증용)
-  metrics       JSONB NOT NULL,         -- 종목별 자유 필드 (아래 예시 참고)
-  ai_confidence FLOAT,                  -- AI 파싱 신뢰도 (0~1)
-  created_at    TIMESTAMPTZ DEFAULT now()
-);
-
--- metrics JSONB 예시
--- 달리기: { "distance_km": 5, "duration_min": 28, "avg_hr": 150, "pace_per_km": "5:36" }
--- 턱걸이: { "sets": 5, "reps_per_set": [8,7,7,6,5], "total_reps": 33, "difficulty": 7 }
--- 수영:   { "distance_m": 1000, "stroke": "freestyle", "duration_min": 22 }
-
--- AI 코칭 메시지 기록
-CREATE TABLE coach_messages (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id     UUID REFERENCES auth.users NOT NULL,
-  activity_id UUID REFERENCES activities,   -- 특정 운동에 대한 피드백이면 연결
-  role        TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
-  content     TEXT NOT NULL,
-  ui_card     JSONB,                        -- 채팅창에 렌더링할 위젯 데이터
-  created_at  TIMESTAMPTZ DEFAULT now()
-);
-
--- 훈련 계획
-CREATE TABLE training_plans (
-  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id       UUID REFERENCES auth.users NOT NULL,
-  goal_id       UUID REFERENCES goals,
-  plan          JSONB NOT NULL,             -- 주간 단위 구조화된 훈련 계획
-  valid_from    DATE NOT NULL,
-  valid_until   DATE,
-  generated_by  TEXT NOT NULL,             -- LLM provider 기록 ('gemini-1.5-flash' 등)
-  created_at    TIMESTAMPTZ DEFAULT now()
-);
-
--- RLS 정책 (모든 테이블에 동일하게 적용)
-ALTER TABLE activities ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "users can only access own data"
-  ON activities FOR ALL USING (auth.uid() = user_id);
--- goals, coach_messages, training_plans도 동일하게 적용
-```
+- **Frontend:** Next.js 14 (App Router), TailwindCSS, shadcn/ui
+- **State Management:** Zustand (minimal client state)
+- **Backend:** Next.js Server Actions
+- **Database & Auth:** Supabase (PostgreSQL) with Row Level Security (RLS)
+- **AI:** Google Gemini API (`@google/genai`), abstracted to allow model swapping
+- **Deployment:** Vercel
 
 ---
 
-## 5. 데이터 가져오기 / 내보내기 (Import / Export)
+## 3. Database Schema Concept
 
-### 지원 포맷
-| 방향 | 포맷 | 비고 |
-|------|------|------|
-| 가져오기 | Google Sheets | OAuth로 시트 직접 연결 |
-| 가져오기 | Notion Database | Notion API 연동 |
-| 가져오기 | CSV | 파일 업로드 |
-| 새로 시작 | — | 기존 데이터 없이 앱에서 바로 시작 |
-| 내보내기 | Google Sheets | 새 시트로 내보내기 |
-| 내보내기 | Notion Database | 새 DB 페이지로 내보내기 |
-| 내보내기 | CSV | 파일 다운로드 |
-
-### 마이그레이션 전략
-소스 데이터의 컬럼 구조가 천차만별이므로, **AI가 컬럼 매핑을 자동 추론**한다.
-사용자가 매핑 결과를 확인 & 수정할 수 있는 UI를 제공한 후 최종 저장.
-
-```
-소스 (Sheets / Notion / CSV)
-        ↓
-AI 컬럼 매핑 자동 추론
-        ↓
-사용자 확인 UI (매핑 테이블 — 수정 가능)
-        ↓
-Supabase activities 테이블로 INSERT
-```
-
-> **TODO:** 기존 구글 시트 및 Notion DB의 실제 컬럼명 확인 후 마이그레이션 매핑 로직 구체화 필요
+- **`goals`**: Stores user goals (e.g., "10km under 49 mins"). Uses `target` (JSONB) for flexibility.
+- **`activities`**: Workout logs. Uses `metrics` (JSONB) to store dynamic fields (distance, duration, HR, etc.) without strict columns.
+- **`coach_messages`**: Stores the AI coaching history.
+- **`training_plans`**: Stores the AI-generated weekly schedules.
 
 ---
 
-## 6. 백엔드 아키텍처 & 데이터 플로우
+## 4. Development Phases
 
-### 시스템 구성
+### Phase 1: Running MVP (✅ Completed)
+- [x] Supabase project setup & RLS policies
+- [x] Supabase Auth (Anonymous login)
+- [x] LLM abstraction layer & Gemini Provider
+- [x] Chat input → AI parse → DB save flow
+- [x] Dashboard UI (Recent activities, Current goal)
+- [x] Insights chart (7-day distance using Recharts)
+- [x] AI coaching feedback generation
+- [x] AI training plan generation
 
-```
-[Client: Next.js]
-      ↓ POST /api/chat
-[Server Actions / API Routes]  ← API 키는 서버에만 존재
-      ↓                  ↓
-[LLM Provider]      [Supabase DB]
-  (Gemini 등)             ↓
-                    [Background Job]
-                    Inngest / QStash
-                          ↓
-                  [Export 대상: Sheets / Notion / CSV]
-```
+### Phase 2: Data I/O (Pending)
+- [ ] CSV / Google Sheets / Notion DB Import & Export
+- [ ] AI column mapping inference + User confirmation UI
+- [ ] Data migration strategy execution
 
-### 채팅 입력 처리 플로우
+### Phase 3: Expansion (Pending)
+- [ ] Add support for pull-ups and other exercise types
+- [ ] Generalize goal structures for non-fitness domains (Reading, etc.)
+- [ ] Speech-to-Text (STT) input integration
 
-1. **사용자 입력** → `POST /api/chat` (예: "오늘 5km 뛰었어, 평심 150")
-2. **AI 파싱** → LLM에 Function Calling으로 구조화 JSON 추출
-3. **신뢰도 검증** → `ai_confidence < 0.8`이면 사용자에게 확인 요청
-4. **DB 저장** → `activities` 테이블에 INSERT
-5. **코칭 생성** → 최근 7일 데이터 + 현재 기록 → AI 코칭 메시지 생성
-6. **훈련 계획 갱신** → (비동기) 계획 재생성 트리거 여부 판단
-7. **응답** → 클라이언트에 코칭 메시지 + UI 카드 반환
-8. **백그라운드 동기화** → (선택적) 외부 소스로 내보내기
-
-### AI 파싱 프롬프트 설계 원칙
-- 종목 자동 감지 (달리기 / 턱걸이 / 기타)
-- 단위 자동 변환 (5k → 5km, 30분 → 30)
-- 모호한 입력은 파싱하지 않고 되묻기
-- 파싱 결과는 항상 JSON Schema로 검증
+### Phase 4: Public Release (Pending)
+- [ ] Multi-user onboarding (Google OAuth)
+- [ ] User-specific LLM keys (Bring Your Own Key)
+- [ ] Billing and plan structure
 
 ---
 
-## 7. UI/UX 구조
+## 5. Environment Variables
 
-### 핵심 화면
-
-#### 대시보드 (`/dashboard`)
-- **상단:** 현재 목표 진척도 프로그레스 바 (예: "10km 49분까지 XX%")
-- **중앙:** 최근 활동 카드 피드
-- **하단 FAB:** [채팅으로 기록], [직접 입력]
-
-#### AI 코치 채팅창 (`/coach`)
-- 텍스트 + 음성 입력 (STT) 지원
-- AI 파싱 후 **Rich UI 카드**를 채팅창 내에 렌더링
-
-```
-┌─────────────────────────────┐
-│ 🏃 달리기                    │
-│ 거리: 5km  시간: 28분         │
-│ 평균 심박수: 150bpm            │
-│ 난이도: ●●●○○  [저장하기]      │
-└─────────────────────────────┘
-```
-
-- 파싱 신뢰도가 낮으면 사용자에게 확인 요청 후 저장
-
-#### 인사이트 리포트 (`/insights`)
-- 달리기 탭: 주간 거리 누적, 페이스 변화, 심박수 Zone 분포
-- 턱걸이 탭: 총 볼륨(세트×횟수) 우상향 차트
-- 차트 라이브러리: Recharts
-
-#### 훈련 계획 (`/plan`)
-- AI가 생성한 주간 훈련 계획 표시
-- 목표 달성 현황에 따라 자동 갱신
-- 계획 수동 수정 가능
-
-#### 데이터 관리 (`/settings/data`)
-- 가져오기: Google Sheets / Notion DB / CSV 업로드
-- 내보내기: 동일 포맷으로 다운로드
-- 컬럼 매핑 확인 UI
-
----
-
-## 8. 프로젝트 폴더 구조
-
-```
-src/
-├── app/
-│   ├── (auth)/
-│   │   └── login/              # Supabase 소셜 로그인
-│   ├── dashboard/              # 활동 요약 및 진척도
-│   ├── coach/                  # AI 채팅 인터페이스
-│   ├── insights/               # 차트 및 분석
-│   ├── plan/                   # 훈련 계획
-│   ├── settings/
-│   │   └── data/               # Import / Export
-│   └── api/
-│       ├── chat/route.ts       # AI 파싱 & 코칭 엔드포인트
-│       ├── plan/route.ts       # 훈련 계획 생성
-│       └── sync/route.ts       # 외부 소스 동기화 웹훅
-├── components/
-│   ├── ui/                     # 버튼, 카드 등 공통 컴포넌트
-│   ├── charts/                 # Recharts 기반 시각화
-│   ├── chat/                   # 채팅 말풍선, Rich UI 카드
-│   └── import/                 # 컬럼 매핑 확인 UI
-├── lib/
-│   ├── supabase.ts             # Supabase 클라이언트
-│   ├── llm/
-│   │   ├── types.ts            # LLMProvider 인터페이스
-│   │   ├── index.ts            # provider 팩토리 (환경변수로 선택)
-│   │   └── providers/
-│   │       ├── gemini.ts       # Gemini 구현체 (기본, 무료 티어)
-│   │       ├── claude.ts       # Claude 구현체
-│   │       └── openai.ts       # OpenAI 구현체
-│   ├── importers/
-│   │   ├── types.ts            # DataImporter 인터페이스
-│   │   ├── sheets.ts           # Google Sheets 가져오기
-│   │   ├── notion.ts           # Notion DB 가져오기
-│   │   └── csv.ts              # CSV 파일 파싱
-│   └── exporters/
-│       ├── sheets.ts           # Google Sheets 내보내기
-│       ├── notion.ts           # Notion DB 내보내기
-│       └── csv.ts              # CSV 다운로드
-└── types/
-    └── database.ts             # Supabase 테이블 타입 정의
-```
-
----
-
-## 9. 개발 단계 (Phases)
-
-### Phase 1 — 달리기 MVP
-- [ ] Supabase 프로젝트 셋업 + RLS 적용
-- [ ] Supabase Auth (Google 소셜 로그인)
-- [ ] LLM 추상화 레이어 + Gemini Provider 구현
-- [ ] 채팅 입력 → AI 파싱 → DB 저장 플로우
-- [ ] 대시보드 (진척도 + 최근 활동)
-- [ ] 기본 인사이트 차트 (달리기)
-- [ ] AI 코칭 피드백 생성
-- [ ] AI 훈련 계획 자동 생성
-
-### Phase 2 — 데이터 I/O
-- [ ] CSV 가져오기 / 내보내기
-- [ ] Google Sheets 가져오기 / 내보내기
-- [ ] Notion DB 가져오기 / 내보내기
-- [ ] AI 컬럼 매핑 자동 추론 + 사용자 확인 UI
-- [ ] 기존 데이터 마이그레이션 (본인 구글 시트 + Notion)
-
-### Phase 3 — 턱걸이 + 확장
-- [ ] 턱걸이 파싱 & 인사이트 추가
-- [ ] 종목 추가 구조 일반화
-- [ ] 음성 입력 (STT)
-- [ ] 다른 LLM Provider 구현 및 교체 테스트
-
-### Phase 4 — 퍼블릭 서비스 (선택)
-- [ ] 멀티유저 온보딩 플로우
-- [ ] 사용자별 LLM 설정 (API 키 직접 입력 등)
-- [ ] 플랜/과금 구조 설계
-
----
-
-## 10. 환경변수
+To run this project locally, create a `.env.local` file with the following:
 
 ```env
 # Supabase
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
-# LLM — 기본값: gemini (무료 티어 사용)
-LLM_PROVIDER=gemini          # gemini | claude | openai
-GEMINI_API_KEY=
-ANTHROPIC_API_KEY=           # Claude로 교체 시
-OPENAI_API_KEY=              # OpenAI로 교체 시
-
-# Google (Sheets 연동)
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-
-# Notion
-NOTION_API_KEY=
-
-# Background Jobs
-INNGEST_EVENT_KEY=
-INNGEST_SIGNING_KEY=
+# AI Provider
+GEMINI_API_KEY=your_gemini_api_key
 ```
 
 ---
 
-## 11. 미결 사항 (TODO / 확인 필요)
-
-- [ ] **기존 구글 시트 컬럼 구조 확인** → 마이그레이션 매핑 로직 구체화
-- [ ] **기존 Notion DB 구조 확인** → 동일
-- [ ] 음성 입력(STT) 제공자 결정 (Web Speech API vs. Whisper API)
-- [ ] 백그라운드 잡 플랫폼 결정 (Inngest vs. QStash vs. Vercel Cron)
-- [ ] 구글 시트 동기화 방향 결정 (단방향 내보내기만? 아니면 양방향 실시간 싱크?)
-- [ ] Notion 연동 범위 결정 (읽기 전용 마이그레이션? 아니면 지속 동기화?)
+## 6. Next Steps
+Move to **Phase 2**, which focuses on Data I/O. The primary task is implementing import and export functionality for CSV, Google Sheets, and Notion, alongside an AI-driven column mapping UI to ingest users' historical data effortlessly.
