@@ -37,9 +37,22 @@ export async function processUserMessage(message: string) {
         savedActivity = data;
         
         // After saving, generate a coaching message
-        // This is a simplified version. We'd fetch recent history here.
+        // Fetch recent history (last 7 days)
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        const { data: recentActivities } = await supabase
+          .from('activities')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .gte('recorded_at', sevenDaysAgo.toISOString())
+          .order('recorded_at', { ascending: true });
+
+        // Pass recent activities as context in the chat
+        const historyContext = `Recent activities (last 7 days):\n${JSON.stringify(recentActivities || [])}\n\nUser just logged: ${message}`;
+        
         const coaching = await llm.chat([
-          { role: 'user', content: message }
+          { role: 'user', content: historyContext }
         ], { userId: session.user.id });
 
         // Save the coach message
