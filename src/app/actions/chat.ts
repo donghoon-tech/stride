@@ -2,7 +2,6 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { llm } from '@/lib/llm'
-import { ParsedActivity } from '@/lib/llm/types'
 
 export async function processUserMessage(message: string) {
   try {
@@ -15,8 +14,6 @@ export async function processUserMessage(message: string) {
     // Attempt to get the current user session
     const supabase = await createClient()
     const { data: { session } } = await supabase.auth.getSession()
-
-    let savedActivity = null;
 
     if (session?.user && parsed.ai_confidence >= 0.8) {
       // Save directly to activities table
@@ -34,8 +31,6 @@ export async function processUserMessage(message: string) {
         .single()
 
       if (!error && data) {
-        savedActivity = data;
-        
         // After saving, generate a coaching message
         // Fetch recent history (last 7 days)
         const sevenDaysAgo = new Date();
@@ -63,7 +58,7 @@ export async function processUserMessage(message: string) {
             activity_id: data.id,
             role: 'assistant',
             content: coaching.content,
-            ui_card: parsed as any // Or some other UI representation
+            ui_card: parsed as unknown as Record<string, unknown> // Or some other UI representation
           })
 
         return { 

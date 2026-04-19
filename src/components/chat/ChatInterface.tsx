@@ -48,7 +48,7 @@ export function ChatInterface() {
           content: 'Sorry, I could not understand that activity. Could you try again?'
         })
       }
-    } catch (error) {
+    } catch {
       addMessage({
         role: 'assistant',
         content: 'An error occurred while processing your request.'

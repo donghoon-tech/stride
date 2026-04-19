@@ -18,7 +18,7 @@ export function GeneratePlanButton() {
       } else {
         alert(res.error || 'Failed to generate plan.')
       }
-    } catch (error) {
+    } catch {
       alert('An unexpected error occurred.')
     } finally {
       setIsLoading(false)

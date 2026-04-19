@@ -15,7 +15,7 @@ export default async function InsightsPage() {
   const sevenDaysAgo = new Date()
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
-  const { data: activities, error } = await supabase
+  const { data: activities } = await supabase
     .from('activities')
     .select('*')
     .eq('user_id', session.user.id)

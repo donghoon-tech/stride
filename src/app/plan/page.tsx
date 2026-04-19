@@ -13,7 +13,7 @@ export default async function PlanPage() {
   }
 
   // Fetch the latest active plan
-  const { data: plans, error } = await supabase
+  const { data: plans } = await supabase
     .from('training_plans')
     .select('*')
     .eq('user_id', session.user.id)
@@ -36,7 +36,7 @@ export default async function PlanPage() {
         <section>
           {!activePlan ? (
             <div className="p-12 text-center bg-white border rounded-xl text-gray-500 shadow-sm">
-              <p>You don't have an active training plan yet.</p>
+              <p>You don&apos;t have an active training plan yet.</p>
               <p className="text-sm mt-2">Set a goal and click the button above to generate one.</p>
             </div>
           ) : (

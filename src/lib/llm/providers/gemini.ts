@@ -41,7 +41,7 @@ export class GeminiProvider implements LLMProvider {
     return JSON.parse(response.text) as ParsedActivity;
   }
 
-  async chat(messages: Message[], context: UserContext): Promise<CoachResponse> {
+  async chat(messages: Message[], _context: UserContext): Promise<CoachResponse> {
     const systemInstruction = `You are a supportive, professional AI fitness coach. Analyze the user's latest activity and their history if provided. Keep your response brief, encouraging, and actionable (under 3 sentences).`;
     
     // Convert our internal Message format to Gemini's format if needed,

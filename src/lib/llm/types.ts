@@ -1,6 +1,6 @@
 export interface ParsedActivity {
   activity_type: string;
-  metrics: Record<string, any>;
+  metrics: Record<string, unknown>;
   ai_confidence: number;
 }
 
@@ -16,14 +16,14 @@ export interface UserContext {
 
 export interface CoachResponse {
   content: string;
-  ui_card?: Record<string, any>;
+  ui_card?: Record<string, unknown>;
 }
 
 export interface Goal {
   id: string;
   activity_type: string;
   title: string;
-  target: Record<string, any>;
+  target: Record<string, unknown>;
   deadline?: string | null;
 }
 
@@ -31,13 +31,13 @@ export interface Activity {
   id: string;
   activity_type: string;
   recorded_at: string;
-  metrics: Record<string, any>;
+  metrics: Record<string, unknown>;
 }
 
 export interface TrainingPlan {
   valid_from: string;
   valid_until?: string | null;
-  plan: Record<string, any>;
+  plan: Record<string, unknown>;
   generated_by: string;
 }
 

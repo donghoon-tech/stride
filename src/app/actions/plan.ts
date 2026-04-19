@@ -44,7 +44,7 @@ export async function generateWeeklyPlan() {
       id: goal.id,
       activity_type: goal.activity_type,
       title: goal.title,
-      target: goal.target as Record<string, any>,
+      target: goal.target as Record<string, unknown>,
       deadline: goal.deadline
     }
 
@@ -52,7 +52,7 @@ export async function generateWeeklyPlan() {
       id: a.id,
       activity_type: a.activity_type,
       recorded_at: a.recorded_at,
-      metrics: a.metrics as Record<string, any>
+      metrics: a.metrics as Record<string, unknown>
     }))
 
     // Ask LLM to generate the plan

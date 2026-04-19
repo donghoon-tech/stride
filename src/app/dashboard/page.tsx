@@ -14,7 +14,7 @@ export default async function DashboardPage() {
   }
 
   // Fetch recent activities
-  const { data: activities, error } = await supabase
+  const { data: activities } = await supabase
     .from('activities')
     .select('*')
     .eq('user_id', session.user.id)
@@ -36,7 +36,7 @@ export default async function DashboardPage() {
       <div className="max-w-5xl mx-auto space-y-12">
         <header className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-gray-500">Welcome back! Here's your current progress.</p>
+          <p className="text-gray-500">Welcome back! Here&apos;s your current progress.</p>
         </header>
 
         {/* Goal Progress Section */}
