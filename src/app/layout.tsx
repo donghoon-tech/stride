@@ -16,6 +16,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Stride - AI Fitness Coach",
   description: "Log workouts naturally. Let AI handle the rest.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Stride",
+  },
 };
 
 export default function RootLayout({
