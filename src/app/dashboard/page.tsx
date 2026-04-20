@@ -97,16 +97,16 @@ export default async function DashboardPage() {
                     </div>
                     
                     <div className="space-y-2 text-sm text-gray-600">
-                      {goal.target?.distance_km && (
+                      {Boolean(goal.target?.distance_km) && (
                         <div className="flex justify-between">
                           <span>Target Distance:</span>
-                          <span className="font-medium text-gray-900">{goal.target.distance_km} km</span>
+                          <span className="font-medium text-gray-900">{String(goal.target.distance_km)} km</span>
                         </div>
                       )}
-                      {goal.target?.time_min && (
+                      {Boolean(goal.target?.time_min) && (
                         <div className="flex justify-between">
                           <span>Target Time:</span>
-                          <span className="font-medium text-gray-900">{goal.target.time_min} mins</span>
+                          <span className="font-medium text-gray-900">{String(goal.target.time_min)} mins</span>
                         </div>
                       )}
                       {goal.deadline && (

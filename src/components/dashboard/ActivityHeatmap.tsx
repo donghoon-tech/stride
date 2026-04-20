@@ -85,7 +85,7 @@ export function ActivityHeatmap({ activities, days = 90 }: ActivityHeatmapProps)
   return (
     <div className="w-full overflow-x-auto pb-2">
       <div className="min-w-fit flex gap-1">
-        <TooltipProvider delayDuration={0}>
+        <TooltipProvider delay={0}>
           {weeks.map((week, weekIndex) => (
             <div key={weekIndex} className="flex flex-col gap-1">
               {/* Fill empty days at the start of the first week to align properly */}
@@ -95,11 +95,9 @@ export function ActivityHeatmap({ activities, days = 90 }: ActivityHeatmapProps)
               
               {week.map((day) => (
                 <Tooltip key={day.dateStr}>
-                  <TooltipTrigger asChild>
-                    <div 
-                      className={`w-3 h-3 rounded-sm ${getColor(day.level)} hover:ring-1 hover:ring-black/20 hover:scale-110 transition-all cursor-pointer`}
-                    />
-                  </TooltipTrigger>
+                  <TooltipTrigger
+                    className={`w-3 h-3 rounded-sm ${getColor(day.level)} hover:ring-1 hover:ring-black/20 hover:scale-110 transition-all cursor-pointer focus:outline-none border-none p-0 m-0`}
+                  />
                   <TooltipContent>
                     <p className="font-medium text-xs">{format(day.date, 'MMM d, yyyy')}</p>
                     {day.data ? (

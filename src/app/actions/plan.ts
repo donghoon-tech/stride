@@ -43,6 +43,7 @@ export async function generateWeeklyPlan() {
     const mappedGoal = {
       id: goal.id,
       activity_type: goal.activity_type,
+      goal_type: goal.goal_type,
       title: goal.title,
       target: goal.target as Record<string, unknown>,
       deadline: goal.deadline
