@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { RecentActivities } from '@/components/dashboard/RecentActivities'
+import { ActivityHeatmap } from '@/components/dashboard/ActivityHeatmap'
 import { Activity, Goal } from '@/lib/llm/types'
 
 export default async function DashboardPage() {
@@ -13,13 +14,12 @@ export default async function DashboardPage() {
     redirect('/login')
   }
 
-  // Fetch recent activities
+  // Fetch all recent activities for the heatmap and recent list
   const { data: activities } = await supabase
     .from('activities')
     .select('*')
     .eq('user_id', session.user.id)
     .order('recorded_at', { ascending: false })
-    .limit(10)
 
   // Fetch all active goals
   const { data: goalsData } = await supabase
@@ -142,10 +142,18 @@ export default async function DashboardPage() {
           )}
         </section>
 
+        {/* Activity Heatmap Section */}
+        <section className="space-y-4">
+          <h2 className="text-2xl font-semibold tracking-tight">Activity Heatmap</h2>
+          <div className="bg-gray-50 border rounded-xl p-5">
+            <ActivityHeatmap activities={(activities as unknown as Activity[]) || []} />
+          </div>
+        </section>
+
         {/* Recent Activities Section */}
         <section className="space-y-4">
           <h2 className="text-2xl font-semibold tracking-tight">Recent Activities</h2>
-          <RecentActivities activities={(activities as unknown as Activity[]) || []} />
+          <RecentActivities activities={((activities as unknown as Activity[]) || []).slice(0, 10)} />
         </section>
       </div>
     </div>
