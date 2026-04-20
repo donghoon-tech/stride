@@ -152,7 +152,14 @@ export default async function DashboardPage() {
 
         {/* Recent Activities Section */}
         <section className="space-y-4">
-          <h2 className="text-2xl font-semibold tracking-tight">Recent Activities</h2>
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-semibold tracking-tight">Recent Activities</h2>
+            <Link href="/activities/new">
+              <Button size="sm" variant="outline">
+                + Log Activity
+              </Button>
+            </Link>
+          </div>
           <RecentActivities activities={((activities as unknown as Activity[]) || []).slice(0, 10)} />
         </section>
       </div>
