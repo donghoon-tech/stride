@@ -14,6 +14,7 @@ export async function createGoal(formData: FormData): Promise<void> {
 
   const title = formData.get('title') as string
   const activity_type = formData.get('activity_type') as string
+  const goal_type = formData.get('goal_type') as string
   const targetDistance = formData.get('target_distance') as string
   const targetTime = formData.get('target_time') as string
   const deadline = formData.get('deadline') as string
@@ -29,12 +30,13 @@ export async function createGoal(formData: FormData): Promise<void> {
       user_id: session.user.id,
       title,
       activity_type,
+      goal_type,
       target,
       deadline: deadline ? deadline : null,
     })
 
   if (error) {
-    console.error(error)
+    console.error("Supabase insert error:", error)
     redirect('/dashboard?error=failed_to_create_goal')
   }
 

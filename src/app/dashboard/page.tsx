@@ -52,77 +52,85 @@ export default async function DashboardPage() {
           
           {activeGoals.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2">
-              {activeGoals.map((goal) => (
-                <div key={goal.id} className="bg-gray-50 border rounded-xl p-5 space-y-4 transition-all hover:border-gray-300">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-semibold text-lg">{goal.title}</h3>
-                      <span className="inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-black text-white capitalize">
-                        {goal.activity_type}
-                      </span>
-                    </div>
-                    <span className="text-sm font-medium text-gray-500">In Progress</span>
-                  </div>
-                  
-                  <div className="space-y-2 text-sm text-gray-600">
-                    {goal.target?.distance_km && (
-                      <div className="flex justify-between">
-                        <span>Target Distance:</span>
-                        <span className="font-medium text-gray-900">{goal.target.distance_km} km</span>
-                      </div>
-                    )}
-                    {goal.target?.time_min && (
-                      <div className="flex justify-between">
-                        <span>Target Time:</span>
-                        <span className="font-medium text-gray-900">{goal.target.time_min} mins</span>
-                      </div>
-                    )}
-                    {goal.deadline && (
-                      <div className="flex justify-between">
-                        <span>Deadline:</span>
-                        <span className="font-medium text-gray-900">
-                          {new Date(goal.deadline).toLocaleDateString()}
-                        </span>
-                      </div>
-                    )}
-                  </div>
+              {activeGoals.map((goal) => {
+                let progress = 0;
+                if (goal.goal_type === 'cumulative') {
+                  if (goal.target?.distance_km) {
+                    const totalDistance = activities?.filter(a => a.activity_type === goal.activity_type)
+                      .reduce((sum, a) => sum + (Number((a.metrics as any)?.distance_km) || 0), 0) || 0;
+                    progress = Math.min(Math.round((totalDistance / Number(goal.target.distance_km)) * 100), 100);
+                  }
+                } else if (goal.goal_type === 'record') {
+                  if (goal.target?.distance_km && goal.target?.time_min) {
+                    const targetDistance = Number(goal.target.distance_km);
+                    const targetTime = Number(goal.target.time_min);
+                    // Find activities that meet or exceed the target distance
+                    const validActivities = activities?.filter(a => 
+                      a.activity_type === goal.activity_type && 
+                      (Number((a.metrics as any)?.distance_km) || 0) >= targetDistance
+                    ) || [];
+                    
+                    if (validActivities.length > 0) {
+                      const bestTime = Math.min(...validActivities.map(a => Number((a.metrics as any)?.time_min) || Infinity));
+                      if (bestTime !== Infinity && bestTime > 0) {
+                        progress = Math.min(Math.round((targetTime / bestTime) * 100), 100);
+                      }
+                    }
+                  }
+                }
 
-                  <div className="space-y-1.5 pt-2">
-                    <div className="flex justify-between text-xs font-medium text-gray-500">
-                      <span>Progress</span>
-                      {/* Calculate progress based on distance if available, otherwise show 0% */}
-                      {(() => {
-                        let progress = 0;
-                        if (goal.target?.distance_km) {
-                          // Find total distance from activities matching this goal's type
-                          const totalDistance = activities?.filter(a => a.activity_type === goal.activity_type)
-                            .reduce((sum, a) => sum + (Number((a.metrics as any)?.distance_km) || 0), 0) || 0;
-                          
-                          progress = Math.min(Math.round((totalDistance / Number(goal.target.distance_km)) * 100), 100);
-                        }
-                        return (
-                          <>
-                            <span>{progress}%</span>
-                          </>
-                        )
-                      })()}
+                return (
+                  <div key={goal.id} className="bg-gray-50 border rounded-xl p-5 space-y-4 transition-all hover:border-gray-300">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-semibold text-lg">{goal.title}</h3>
+                        <div className="flex gap-2 mt-1">
+                          <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-black text-white capitalize">
+                            {goal.activity_type}
+                          </span>
+                          <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium border border-gray-200 text-gray-600 bg-white">
+                            {goal.goal_type === 'record' ? 'Best Record' : 'Cumulative'}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-sm font-medium text-gray-500">In Progress</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      {(() => {
-                         let progress = 0;
-                         if (goal.target?.distance_km) {
-                           const totalDistance = activities?.filter(a => a.activity_type === goal.activity_type)
-                             .reduce((sum, a) => sum + (Number((a.metrics as any)?.distance_km) || 0), 0) || 0;
-                           progress = Math.min(Math.round((totalDistance / Number(goal.target.distance_km)) * 100), 100);
-                         }
-                         return (
-                           <div className="bg-black h-2 rounded-full transition-all duration-500" style={{ width: `${progress}%` }}></div>
-                         )
-                      })()}
+                    
+                    <div className="space-y-2 text-sm text-gray-600">
+                      {goal.target?.distance_km && (
+                        <div className="flex justify-between">
+                          <span>Target Distance:</span>
+                          <span className="font-medium text-gray-900">{goal.target.distance_km} km</span>
+                        </div>
+                      )}
+                      {goal.target?.time_min && (
+                        <div className="flex justify-between">
+                          <span>Target Time:</span>
+                          <span className="font-medium text-gray-900">{goal.target.time_min} mins</span>
+                        </div>
+                      )}
+                      {goal.deadline && (
+                        <div className="flex justify-between">
+                          <span>Deadline:</span>
+                          <span className="font-medium text-gray-900">
+                            {new Date(goal.deadline).toLocaleDateString()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-1.5 pt-2">
+                      <div className="flex justify-between text-xs font-medium text-gray-500">
+                        <span>Progress</span>
+                        <span>{progress}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-black h-2 rounded-full transition-all duration-500" style={{ width: `${progress}%` }}></div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="bg-gray-50 border border-dashed rounded-xl p-8 text-center space-y-3">

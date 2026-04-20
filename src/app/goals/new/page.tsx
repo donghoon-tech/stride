@@ -20,6 +20,26 @@ export default function NewGoalPage() {
           </header>
 
           <form action={createGoal} className="space-y-4">
+            <div className="space-y-3">
+              <label className="text-sm font-medium">Goal Type</label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 border rounded-lg p-3 flex-1 cursor-pointer hover:bg-gray-50">
+                  <input type="radio" name="goal_type" value="cumulative" defaultChecked className="accent-black" />
+                  <div className="space-y-0.5">
+                    <div className="font-medium text-sm">Cumulative</div>
+                    <div className="text-xs text-gray-500">e.g., Run 50km total</div>
+                  </div>
+                </label>
+                <label className="flex items-center gap-2 border rounded-lg p-3 flex-1 cursor-pointer hover:bg-gray-50">
+                  <input type="radio" name="goal_type" value="record" className="accent-black" />
+                  <div className="space-y-0.5">
+                    <div className="font-medium text-sm">Best Record</div>
+                    <div className="text-xs text-gray-500">e.g., 10km under 50m</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <label htmlFor="activity_type" className="text-sm font-medium">Activity Type</label>
               <Input id="activity_type" name="activity_type" defaultValue="running" required />

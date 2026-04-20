@@ -1,0 +1,1 @@
+ALTER TABLE goals ADD COLUMN goal_type TEXT NOT NULL DEFAULT 'cumulative' CHECK (goal_type IN ('cumulative', 'record'));

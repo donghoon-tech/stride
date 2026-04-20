@@ -22,6 +22,7 @@ export interface CoachResponse {
 export interface Goal {
   id: string;
   activity_type: string;
+  goal_type: 'cumulative' | 'record';
   title: string;
   target: Record<string, unknown>;
   deadline?: string | null;
