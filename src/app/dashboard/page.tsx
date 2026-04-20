@@ -90,10 +90,35 @@ export default async function DashboardPage() {
                   <div className="space-y-1.5 pt-2">
                     <div className="flex justify-between text-xs font-medium text-gray-500">
                       <span>Progress</span>
-                      <span>45%</span>
+                      {/* Calculate progress based on distance if available, otherwise show 0% */}
+                      {(() => {
+                        let progress = 0;
+                        if (goal.target?.distance_km) {
+                          // Find total distance from activities matching this goal's type
+                          const totalDistance = activities?.filter(a => a.activity_type === goal.activity_type)
+                            .reduce((sum, a) => sum + (Number((a.metrics as any)?.distance_km) || 0), 0) || 0;
+                          
+                          progress = Math.min(Math.round((totalDistance / Number(goal.target.distance_km)) * 100), 100);
+                        }
+                        return (
+                          <>
+                            <span>{progress}%</span>
+                          </>
+                        )
+                      })()}
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-black h-2 rounded-full" style={{ width: '45%' }}></div>
+                      {(() => {
+                         let progress = 0;
+                         if (goal.target?.distance_km) {
+                           const totalDistance = activities?.filter(a => a.activity_type === goal.activity_type)
+                             .reduce((sum, a) => sum + (Number((a.metrics as any)?.distance_km) || 0), 0) || 0;
+                           progress = Math.min(Math.round((totalDistance / Number(goal.target.distance_km)) * 100), 100);
+                         }
+                         return (
+                           <div className="bg-black h-2 rounded-full transition-all duration-500" style={{ width: `${progress}%` }}></div>
+                         )
+                      })()}
                     </div>
                   </div>
                 </div>
