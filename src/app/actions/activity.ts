@@ -14,15 +14,25 @@ export async function createManualActivity(formData: FormData): Promise<void> {
 
   const goal_id = formData.get('goal_id') as string | null
   const activity_type = formData.get('activity_type') as string
+  const date = formData.get('date') as string
+  
+  // Legacy / preset fields
   const distance = formData.get('distance') as string
   const duration = formData.get('duration') as string
-  const pagesRead = formData.get('pages_read') as string
-  const date = formData.get('date') as string
+  
+  // Universal fields
+  const metricName = formData.get('metric_name') as string
+  const metricValue = formData.get('metric_value') as string
 
-  const metrics = {
-    distance_km: distance ? Number(distance) : undefined,
-    time_min: duration ? Number(duration) : undefined,
-    pages_read: pagesRead ? Number(pagesRead) : undefined,
+  let metrics: Record<string, any> = {};
+
+  if (metricName && metricValue) {
+    metrics[metricName] = Number(metricValue);
+  } else {
+    metrics = {
+      distance_km: distance ? Number(distance) : undefined,
+      time_min: duration ? Number(duration) : undefined,
+    }
   }
 
   const recorded_at = date ? new Date(date).toISOString() : new Date().toISOString()
