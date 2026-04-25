@@ -54,24 +54,28 @@ export default async function DashboardPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               {activeGoals.map((goal) => {
                 let progress = 0;
-                let currentPages = 0;
-                let totalPages = 0;
+                let currentVal = 0;
+                let targetVal = 0;
+                let metricName = "";
 
-                if (goal.activity_type === 'reading' && goal.target?.total_pages) {
-                  currentPages = Number((goal as any).current_progress?.pages_read) || 0;
-                  totalPages = Number(goal.target.total_pages);
-                  progress = Math.min(Math.round((currentPages / totalPages) * 100), 100);
+                if (goal.target?.metric_name) {
+                  // Universal Metric Logic
+                  metricName = goal.target.metric_name as string;
+                  currentVal = Number((goal as any).current_progress?.[metricName]) || 0;
+                  targetVal = Number(goal.target.target_value) || 1; // avoid div by 0
+                  progress = Math.min(Math.round((currentVal / targetVal) * 100), 100);
                 } else if (goal.goal_type === 'cumulative') {
+                  // Legacy Running Logic (Cumulative)
                   if (goal.target?.distance_km) {
                     const totalDistance = activities?.filter(a => a.activity_type === goal.activity_type)
                       .reduce((sum, a) => sum + (Number((a.metrics as any)?.distance_km) || 0), 0) || 0;
                     progress = Math.min(Math.round((totalDistance / Number(goal.target.distance_km)) * 100), 100);
                   }
                 } else if (goal.goal_type === 'record') {
+                  // Legacy Running Logic (Record)
                   if (goal.target?.distance_km && goal.target?.time_min) {
                     const targetDistance = Number(goal.target.distance_km);
                     const targetTime = Number(goal.target.time_min);
-                    // Find activities that meet or exceed the target distance
                     const validActivities = activities?.filter(a => 
                       a.activity_type === goal.activity_type && 
                       (Number((a.metrics as any)?.distance_km) || 0) >= targetDistance
@@ -104,29 +108,33 @@ export default async function DashboardPage() {
                     </div>
                     
                     <div className="space-y-2 text-sm text-gray-600">
-                      {Boolean(goal.target?.total_pages) && (
-                        <div className="flex justify-between">
-                          <span>Target Pages:</span>
-                          <span className="font-medium text-gray-900">{String(goal.target.total_pages)} pages</span>
-                        </div>
-                      )}
-                      {Boolean(goal.target?.total_pages) && (
-                        <div className="flex justify-between">
-                          <span>Current Pages:</span>
-                          <span className="font-medium text-gray-900">{currentPages} pages</span>
-                        </div>
-                      )}
-                      {Boolean(goal.target?.distance_km) && (
-                        <div className="flex justify-between">
-                          <span>Target Distance:</span>
-                          <span className="font-medium text-gray-900">{String(goal.target.distance_km)} km</span>
-                        </div>
-                      )}
-                      {Boolean(goal.target?.time_min) && (
-                        <div className="flex justify-between">
-                          <span>Target Time:</span>
-                          <span className="font-medium text-gray-900">{String(goal.target.time_min)} mins</span>
-                        </div>
+                      {Boolean(goal.target?.metric_name) ? (
+                        <>
+                          <div className="flex justify-between">
+                            <span>Target {metricName}:</span>
+                            <span className="font-medium text-gray-900">{targetVal} {metricName}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Current {metricName}:</span>
+                            <span className="font-medium text-gray-900">{currentVal} {metricName}</span>
+                          </div>
+                        </>
+                      ) : (
+                        // Legacy Running Fields
+                        <>
+                          {Boolean(goal.target?.distance_km) && (
+                            <div className="flex justify-between">
+                              <span>Target Distance:</span>
+                              <span className="font-medium text-gray-900">{String(goal.target.distance_km)} km</span>
+                            </div>
+                          )}
+                          {Boolean(goal.target?.time_min) && (
+                            <div className="flex justify-between">
+                              <span>Target Time:</span>
+                              <span className="font-medium text-gray-900">{String(goal.target.time_min)} mins</span>
+                            </div>
+                          )}
+                        </>
                       )}
                       {goal.deadline && (
                         <div className="flex justify-between">
