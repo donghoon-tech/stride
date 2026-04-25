@@ -89,6 +89,7 @@ export default function NewGoalPage() {
                 <div className="space-y-2">
                   <label htmlFor="metric_name" className="text-sm font-medium">Metric Name</label>
                   <Input 
+                    key={`metric_name_${activityType}`}
                     id="metric_name" 
                     name="metric_name" 
                     placeholder={activityType === 'reading' ? 'pages' : 'e.g., laps'} 
