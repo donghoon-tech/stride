@@ -12,14 +12,17 @@ export async function createManualActivity(formData: FormData): Promise<void> {
     redirect('/login')
   }
 
+  const goal_id = formData.get('goal_id') as string | null
   const activity_type = formData.get('activity_type') as string
   const distance = formData.get('distance') as string
   const duration = formData.get('duration') as string
+  const pagesRead = formData.get('pages_read') as string
   const date = formData.get('date') as string
 
   const metrics = {
     distance_km: distance ? Number(distance) : undefined,
     time_min: duration ? Number(duration) : undefined,
+    pages_read: pagesRead ? Number(pagesRead) : undefined,
   }
 
   const recorded_at = date ? new Date(date).toISOString() : new Date().toISOString()
@@ -28,6 +31,7 @@ export async function createManualActivity(formData: FormData): Promise<void> {
     .from('activities')
     .insert({
       user_id: session.user.id,
+      goal_id: goal_id ? goal_id : null,
       activity_type,
       recorded_at,
       raw_input: 'Manual Entry',
