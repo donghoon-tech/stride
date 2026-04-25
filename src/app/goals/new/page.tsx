@@ -1,3 +1,6 @@
+"use client"
+
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createGoal } from "@/app/actions/goal"
@@ -5,6 +8,8 @@ import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 
 export default function NewGoalPage() {
+  const [activityType, setActivityType] = useState('running');
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-8">
       <div className="max-w-md mx-auto space-y-6">
@@ -27,7 +32,7 @@ export default function NewGoalPage() {
                   <input type="radio" name="goal_type" value="cumulative" defaultChecked className="accent-black" />
                   <div className="space-y-0.5">
                     <div className="font-medium text-sm">Cumulative</div>
-                    <div className="text-xs text-gray-500">e.g., Run 50km total</div>
+                    <div className="text-xs text-gray-500">e.g., Read 3000 pages</div>
                   </div>
                 </label>
                 <label className="flex items-center gap-2 border rounded-lg p-3 flex-1 cursor-pointer hover:bg-gray-50">
@@ -42,24 +47,61 @@ export default function NewGoalPage() {
 
             <div className="space-y-2">
               <label htmlFor="activity_type" className="text-sm font-medium">Activity Type</label>
-              <Input id="activity_type" name="activity_type" defaultValue="running" required />
+              <select 
+                id="activity_type" 
+                name="activity_type" 
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={activityType}
+                onChange={(e) => setActivityType(e.target.value)}
+                required
+              >
+                <option value="running">Running</option>
+                <option value="reading">Reading</option>
+                <option value="custom">Custom...</option>
+              </select>
             </div>
             
+            {activityType === 'custom' && (
+              <div className="space-y-2">
+                <label htmlFor="custom_activity_type" className="text-sm font-medium">Custom Activity Name</label>
+                <Input id="custom_activity_type" name="activity_type" placeholder="e.g., Studying, Swimming" />
+              </div>
+            )}
+
             <div className="space-y-2">
               <label htmlFor="title" className="text-sm font-medium">Goal Title</label>
               <Input id="title" name="title" placeholder="e.g., 10km under 50 mins" required />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label htmlFor="target_distance" className="text-sm font-medium">Target Distance (km)</label>
-                <Input id="target_distance" name="target_distance" type="number" step="0.1" placeholder="10" />
+            {activityType === 'running' ? (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label htmlFor="target_distance" className="text-sm font-medium">Target Distance (km)</label>
+                  <Input id="target_distance" name="target_distance" type="number" step="0.1" placeholder="10" />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="target_time" className="text-sm font-medium">Target Time (mins)</label>
+                  <Input id="target_time" name="target_time" type="number" placeholder="50" />
+                </div>
               </div>
-              <div className="space-y-2">
-                <label htmlFor="target_time" className="text-sm font-medium">Target Time (mins)</label>
-                <Input id="target_time" name="target_time" type="number" placeholder="50" />
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label htmlFor="metric_name" className="text-sm font-medium">Metric Name</label>
+                  <Input 
+                    id="metric_name" 
+                    name="metric_name" 
+                    placeholder={activityType === 'reading' ? 'pages' : 'e.g., laps'} 
+                    defaultValue={activityType === 'reading' ? 'pages' : ''}
+                    required 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="target_value" className="text-sm font-medium">Target Value</label>
+                  <Input id="target_value" name="target_value" type="number" placeholder="e.g., 3000" required />
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="space-y-2">
               <label htmlFor="deadline" className="text-sm font-medium">Deadline (Optional)</label>
