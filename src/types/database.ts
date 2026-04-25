@@ -16,6 +16,7 @@ export interface Database {
           activity_type: string
           title: string
           target: Json
+          current_progress: Json | null
           deadline: string | null
           achieved_at: string | null
           created_at: string
@@ -26,6 +27,7 @@ export interface Database {
           activity_type: string
           title: string
           target: Json
+          current_progress?: Json | null
           deadline?: string | null
           achieved_at?: string | null
           created_at?: string
@@ -36,6 +38,7 @@ export interface Database {
           activity_type?: string
           title?: string
           target?: Json
+          current_progress?: Json | null
           deadline?: string | null
           achieved_at?: string | null
           created_at?: string
@@ -45,6 +48,7 @@ export interface Database {
         Row: {
           id: string
           user_id: string
+          goal_id: string | null
           activity_type: string
           recorded_at: string
           raw_input: string | null
@@ -55,6 +59,7 @@ export interface Database {
         Insert: {
           id?: string
           user_id: string
+          goal_id?: string | null
           activity_type: string
           recorded_at: string
           raw_input?: string | null
@@ -65,6 +70,7 @@ export interface Database {
         Update: {
           id?: string
           user_id?: string
+          goal_id?: string | null
           activity_type?: string
           recorded_at?: string
           raw_input?: string | null
