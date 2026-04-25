@@ -17,12 +17,16 @@ export async function createGoal(formData: FormData): Promise<void> {
   const goal_type = formData.get('goal_type') as string
   const targetDistance = formData.get('target_distance') as string
   const targetTime = formData.get('target_time') as string
+  const totalPages = formData.get('total_pages') as string
   const deadline = formData.get('deadline') as string
 
   const target = {
     distance_km: targetDistance ? Number(targetDistance) : undefined,
     time_min: targetTime ? Number(targetTime) : undefined,
+    total_pages: totalPages ? Number(totalPages) : undefined,
   }
+
+  const current_progress = activity_type === 'reading' ? { pages_read: 0 } : undefined;
 
   const { error } = await supabase
     .from('goals')
@@ -32,6 +36,7 @@ export async function createGoal(formData: FormData): Promise<void> {
       activity_type,
       goal_type,
       target,
+      current_progress,
       deadline: deadline ? deadline : null,
     })
 
