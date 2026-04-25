@@ -15,18 +15,33 @@ export async function createGoal(formData: FormData): Promise<void> {
   const title = formData.get('title') as string
   const activity_type = formData.get('activity_type') as string
   const goal_type = formData.get('goal_type') as string
+  const deadline = formData.get('deadline') as string
+  
+  // Legacy / preset fields
   const targetDistance = formData.get('target_distance') as string
   const targetTime = formData.get('target_time') as string
-  const totalPages = formData.get('total_pages') as string
-  const deadline = formData.get('deadline') as string
+  
+  // Universal fields
+  const metricName = formData.get('metric_name') as string
+  const targetValue = formData.get('target_value') as string
 
-  const target = {
-    distance_km: targetDistance ? Number(targetDistance) : undefined,
-    time_min: targetTime ? Number(targetTime) : undefined,
-    total_pages: totalPages ? Number(totalPages) : undefined,
+  let target: Record<string, any> = {};
+  let current_progress: Record<string, any> | undefined = undefined;
+
+  // Handle universal metrics first
+  if (metricName && targetValue) {
+    target = {
+      metric_name: metricName,
+      target_value: Number(targetValue)
+    };
+    current_progress = { [metricName]: 0 };
+  } else {
+    // Fallback to legacy fields for running
+    target = {
+      distance_km: targetDistance ? Number(targetDistance) : undefined,
+      time_min: targetTime ? Number(targetTime) : undefined,
+    }
   }
-
-  const current_progress = activity_type === 'reading' ? { pages_read: 0 } : undefined;
 
   const { error } = await supabase
     .from('goals')
