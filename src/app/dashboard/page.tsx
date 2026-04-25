@@ -54,7 +54,14 @@ export default async function DashboardPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               {activeGoals.map((goal) => {
                 let progress = 0;
-                if (goal.goal_type === 'cumulative') {
+                let currentPages = 0;
+                let totalPages = 0;
+
+                if (goal.activity_type === 'reading' && goal.target?.total_pages) {
+                  currentPages = Number((goal as any).current_progress?.pages_read) || 0;
+                  totalPages = Number(goal.target.total_pages);
+                  progress = Math.min(Math.round((currentPages / totalPages) * 100), 100);
+                } else if (goal.goal_type === 'cumulative') {
                   if (goal.target?.distance_km) {
                     const totalDistance = activities?.filter(a => a.activity_type === goal.activity_type)
                       .reduce((sum, a) => sum + (Number((a.metrics as any)?.distance_km) || 0), 0) || 0;
@@ -97,6 +104,18 @@ export default async function DashboardPage() {
                     </div>
                     
                     <div className="space-y-2 text-sm text-gray-600">
+                      {Boolean(goal.target?.total_pages) && (
+                        <div className="flex justify-between">
+                          <span>Target Pages:</span>
+                          <span className="font-medium text-gray-900">{String(goal.target.total_pages)} pages</span>
+                        </div>
+                      )}
+                      {Boolean(goal.target?.total_pages) && (
+                        <div className="flex justify-between">
+                          <span>Current Pages:</span>
+                          <span className="font-medium text-gray-900">{currentPages} pages</span>
+                        </div>
+                      )}
                       {Boolean(goal.target?.distance_km) && (
                         <div className="flex justify-between">
                           <span>Target Distance:</span>
