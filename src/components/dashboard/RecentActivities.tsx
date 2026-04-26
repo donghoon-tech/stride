@@ -35,7 +35,7 @@ function ActivityActions({ activityId }: { activityId: string }) {
       try {
         await deleteActivity(activityId)
         toast.success('Activity deleted successfully')
-      } catch (error) {
+      } catch {
         toast.error('Failed to delete activity')
       }
     })

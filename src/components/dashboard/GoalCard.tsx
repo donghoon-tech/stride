@@ -39,20 +39,25 @@ export function GoalCard({ goal, activities }: GoalCardProps) {
   if (goal.target?.metric_name) {
     // Universal Metric Logic
     metricName = goal.target.metric_name as string;
-    currentVal = Number((goal as any).current_progress?.[metricName]) || 0;
+    const progressObj = goal.current_progress as Record<string, number> | undefined;
+    currentVal = progressObj?.[metricName] || 0;
     targetVal = Number(goal.target.target_value) || 1; // avoid div by 0
     progress = Math.min(Math.round((currentVal / targetVal) * 100), 100);
   } else if (goal.activity_type === 'reading') {
     // Legacy Reading Logic
     metricName = 'pages_read';
-    currentVal = Number((goal as any).current_progress?.pages_read) || 0;
+    const progressObj = goal.current_progress as Record<string, number> | undefined;
+    currentVal = progressObj?.pages_read || 0;
     targetVal = Number(goal.target?.pages_read) || 1;
     progress = Math.min(Math.round((currentVal / targetVal) * 100), 100);
   } else if (goal.goal_type === 'cumulative') {
     // Legacy Running Logic (Cumulative)
     if (goal.target?.distance_km) {
       const totalDistance = activities?.filter(a => a.activity_type === goal.activity_type)
-        .reduce((sum, a) => sum + (Number((a.metrics as any)?.distance_km) || 0), 0) || 0;
+        .reduce((sum, a) => {
+          const metrics = a.metrics as Record<string, number> | undefined;
+          return sum + (metrics?.distance_km || 0);
+        }, 0) || 0;
       progress = Math.min(Math.round((totalDistance / Number(goal.target.distance_km)) * 100), 100);
     }
   } else if (goal.goal_type === 'record') {
@@ -60,13 +65,16 @@ export function GoalCard({ goal, activities }: GoalCardProps) {
     if (goal.target?.distance_km && goal.target?.time_min) {
       const targetDistance = Number(goal.target.distance_km);
       const targetTime = Number(goal.target.time_min);
-      const validActivities = activities?.filter(a => 
-        a.activity_type === goal.activity_type && 
-        (Number((a.metrics as any)?.distance_km) || 0) >= targetDistance
-      ) || [];
+      const validActivities = activities?.filter(a => {
+        const metrics = a.metrics as Record<string, number> | undefined;
+        return a.activity_type === goal.activity_type && (metrics?.distance_km || 0) >= targetDistance;
+      }) || [];
       
       if (validActivities.length > 0) {
-        const bestTime = Math.min(...validActivities.map(a => Number((a.metrics as any)?.time_min) || Infinity));
+        const bestTime = Math.min(...validActivities.map(a => {
+          const metrics = a.metrics as Record<string, number> | undefined;
+          return metrics?.time_min || Infinity;
+        }));
         if (bestTime !== Infinity && bestTime > 0) {
           progress = Math.min(Math.round((targetTime / bestTime) * 100), 100);
         }
@@ -79,7 +87,7 @@ export function GoalCard({ goal, activities }: GoalCardProps) {
       try {
         await deleteGoal(goal.id)
         toast.success('Goal deleted successfully')
-      } catch (error) {
+      } catch {
         toast.error('Failed to delete goal')
       }
     })
