@@ -28,6 +28,13 @@ export async function processUserMessage(message: string) {
 
       const goal_id = activeGoals && activeGoals.length > 0 ? activeGoals[0].id : null
 
+      // Fallback for legacy DB triggers
+      const metricsToSave = { ...parsed.metrics };
+      if (parsed.activity_type === 'reading') {
+        const fallbackValue = Object.values(metricsToSave)[0] || 0;
+        metricsToSave['pages_read'] = metricsToSave['pages_read'] ?? fallbackValue;
+      }
+
       // Save directly to activities table
       const now = new Date();
       // Adjust to KST (UTC+9) if needed. 
