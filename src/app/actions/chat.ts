@@ -29,15 +29,21 @@ export async function processUserMessage(message: string) {
       const goal_id = activeGoals && activeGoals.length > 0 ? activeGoals[0].id : null
 
       // Save directly to activities table
+      const now = new Date();
+      // Adjust to KST (UTC+9) if needed. 
+      // Note: In a real production app, we'd ideally get the user's timezone from the client.
+      const kstOffset = 9 * 60 * 60 * 1000;
+      const kstTime = new Date(now.getTime() + kstOffset);
+
       const { data, error } = await supabase
         .from('activities')
         .insert({
           user_id: session.user.id,
           goal_id,
           activity_type: parsed.activity_type,
-          recorded_at: new Date().toISOString(),
+          recorded_at: kstTime.toISOString(),
           raw_input: message,
-          metrics: parsed.metrics,
+          metrics: metricsToSave,
           ai_confidence: parsed.ai_confidence
         })
         .select()
