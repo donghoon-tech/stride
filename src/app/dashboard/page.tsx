@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button'
 import { RecentActivities } from '@/components/dashboard/RecentActivities'
 import { ActivityHeatmap } from '@/components/dashboard/ActivityHeatmap'
 import { Activity, Goal } from '@/lib/llm/types'
+import { Trash2 } from 'lucide-react'
+import { deleteGoal } from '@/app/actions/goal'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -97,7 +99,7 @@ export default async function DashboardPage() {
                 }
 
                 return (
-                  <div key={goal.id} className="bg-gray-50 border rounded-xl p-5 space-y-4 transition-all hover:border-gray-300">
+                  <div key={goal.id} className="bg-gray-50 border rounded-xl p-5 space-y-4 transition-all hover:border-gray-300 group relative">
                     <div className="flex justify-between items-start">
                       <div>
                         <h3 className="font-semibold text-lg">{goal.title}</h3>
@@ -110,7 +112,21 @@ export default async function DashboardPage() {
                           </span>
                         </div>
                       </div>
-                      <span className="text-sm font-medium text-gray-500">In Progress</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-gray-500">In Progress</span>
+                        <form action={async () => {
+                          'use server'
+                          await deleteGoal(goal.id)
+                        }} className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            type="submit"
+                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete Goal"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </form>
+                      </div>
                     </div>
                     
                     <div className="space-y-2 text-sm text-gray-600">

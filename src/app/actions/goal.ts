@@ -63,3 +63,42 @@ export async function createGoal(formData: FormData): Promise<void> {
   revalidatePath('/dashboard')
   redirect('/dashboard')
 }
+
+export async function deleteGoal(id: string): Promise<void> {
+  const supabase = await createClient()
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (!session?.user) {
+    redirect('/login')
+  }
+
+  // 1. Unlink activities (optional, or we could let the DB handle it if set to NULL/CASCADE)
+  // Our schema has activities.goal_id REFERENCES goals(id), so we should check policy.
+  // Actually, if we delete a goal, we probably want to keep activities but set goal_id to NULL.
+  await supabase
+    .from('activities')
+    .update({ goal_id: null })
+    .eq('goal_id', id)
+    .eq('user_id', session.user.id)
+
+  // 2. Delete related training plans
+  await supabase
+    .from('training_plans')
+    .delete()
+    .eq('goal_id', id)
+    .eq('user_id', session.user.id)
+
+  // 3. Delete the goal
+  const { error } = await supabase
+    .from('goals')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', session.user.id)
+
+  if (error) {
+    console.error("Supabase delete error:", error)
+    return
+  }
+
+  revalidatePath('/dashboard')
+}

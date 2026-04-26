@@ -75,3 +75,25 @@ export async function createManualActivity(formData: FormData): Promise<void> {
   revalidatePath('/dashboard')
   redirect('/dashboard')
 }
+
+export async function deleteActivity(id: string): Promise<void> {
+  const supabase = await createClient()
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (!session?.user) {
+    redirect('/login')
+  }
+
+  const { error } = await supabase
+    .from('activities')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', session.user.id) // Security check
+
+  if (error) {
+    console.error("Supabase delete error:", error)
+    return
+  }
+
+  revalidatePath('/dashboard')
+}
