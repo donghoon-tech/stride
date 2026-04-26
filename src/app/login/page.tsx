@@ -56,8 +56,6 @@ export default function LoginPage() {
           }
           throw error
         }
-        alert("Account created! You can now log in.")
-        setMode('login')
       }
       router.push('/dashboard')
       router.refresh()
