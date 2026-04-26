@@ -53,7 +53,12 @@ export async function createManualActivity(formData: FormData): Promise<void> {
     }
   }
 
-  const recorded_at = date ? new Date(date).toISOString() : new Date().toISOString()
+  // Ensure recorded_at is handled as a local time string if provided from the form
+  const recorded_at = date ? new Date(date).toISOString() : (() => {
+    const now = new Date();
+    const kstOffset = 9 * 60 * 60 * 1000;
+    return new Date(now.getTime() + kstOffset).toISOString();
+  })();
 
   const { error } = await supabase
     .from('activities')
