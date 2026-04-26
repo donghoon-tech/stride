@@ -32,8 +32,19 @@ export default function NewActivityPage() {
   }, []);
 
   const selectedGoal = goals.find(g => g.id === selectedGoalId);
-  const isUniversalMetric = selectedGoal && selectedGoal.target?.metric_name;
-  const metricName = isUniversalMetric ? selectedGoal.target.metric_name : '';
+  
+  let isUniversalMetric = false;
+  let metricName = '';
+
+  if (selectedGoal) {
+    if (selectedGoal.target?.metric_name) {
+      isUniversalMetric = true;
+      metricName = selectedGoal.target.metric_name;
+    } else if (selectedGoal.activity_type === 'reading') {
+      isUniversalMetric = true;
+      metricName = 'pages_read';
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-8">

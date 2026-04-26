@@ -64,6 +64,12 @@ export default async function DashboardPage() {
                   currentVal = Number((goal as any).current_progress?.[metricName]) || 0;
                   targetVal = Number(goal.target.target_value) || 1; // avoid div by 0
                   progress = Math.min(Math.round((currentVal / targetVal) * 100), 100);
+                } else if (goal.activity_type === 'reading') {
+                  // Legacy Reading Logic
+                  metricName = 'pages_read';
+                  currentVal = Number((goal as any).current_progress?.pages_read) || 0;
+                  targetVal = Number(goal.target?.pages_read) || 1;
+                  progress = Math.min(Math.round((currentVal / targetVal) * 100), 100);
                 } else if (goal.goal_type === 'cumulative') {
                   // Legacy Running Logic (Cumulative)
                   if (goal.target?.distance_km) {
@@ -108,7 +114,7 @@ export default async function DashboardPage() {
                     </div>
                     
                     <div className="space-y-2 text-sm text-gray-600">
-                      {Boolean(goal.target?.metric_name) ? (
+                      {Boolean(metricName) ? (
                         <>
                           <div className="flex justify-between">
                             <span>Target {metricName}:</span>

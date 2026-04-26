@@ -16,11 +16,24 @@ export async function processUserMessage(message: string) {
     const { data: { session } } = await supabase.auth.getSession()
 
     if (session?.user && parsed.ai_confidence >= 0.8) {
+      // Find an active goal for this activity_type
+      const { data: activeGoals } = await supabase
+        .from('goals')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .eq('activity_type', parsed.activity_type)
+        .is('achieved_at', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
+
+      const goal_id = activeGoals && activeGoals.length > 0 ? activeGoals[0].id : null
+
       // Save directly to activities table
       const { data, error } = await supabase
         .from('activities')
         .insert({
           user_id: session.user.id,
+          goal_id,
           activity_type: parsed.activity_type,
           recorded_at: new Date().toISOString(),
           raw_input: message,
