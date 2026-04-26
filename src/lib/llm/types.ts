@@ -25,7 +25,9 @@ export interface Goal {
   goal_type: 'cumulative' | 'record';
   title: string;
   target: Record<string, unknown>;
+  current_progress?: Record<string, unknown> | null;
   deadline?: string | null;
+  achieved_at?: string | null;
 }
 
 export interface Activity {

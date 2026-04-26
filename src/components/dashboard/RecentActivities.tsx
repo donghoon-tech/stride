@@ -1,3 +1,5 @@
+"use client"
+
 import { format } from 'date-fns'
 import { ActivityCard } from '../chat/ActivityCard'
 import { Activity } from '@/lib/llm/types'
@@ -45,17 +47,15 @@ function ActivityActions({ activityId }: { activityId: string }) {
     <div className={isPending ? 'opacity-50' : ''}>
       <AlertDialog>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="p-1 text-gray-400 hover:text-black hover:bg-gray-100 rounded-md transition-colors opacity-50 group-hover:opacity-100">
-              <MoreVertical className="h-3.5 w-3.5" />
-            </button>
+          <DropdownMenuTrigger className="p-1 text-gray-400 hover:text-black hover:bg-gray-100 rounded-md transition-colors opacity-50 group-hover:opacity-100">
+            <MoreVertical className="h-3.5 w-3.5" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem disabled>
               <Pencil className="mr-2 h-4 w-4" />
               <span>Edit</span>
             </DropdownMenuItem>
-            <AlertDialogTrigger asChild>
+            <AlertDialogTrigger className="w-full">
               <DropdownMenuItem className="text-red-600 focus:text-red-600">
                 <Trash2 className="mr-2 h-4 w-4" />
                 <span>Delete</span>
