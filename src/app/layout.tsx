@@ -23,6 +23,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { Toaster } from "@/components/ui/sonner";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -38,6 +40,7 @@ export default function RootLayout({
         <main className="flex-1 w-full h-full">
           {children}
         </main>
+        <Toaster />
       </body>
     </html>
   );
