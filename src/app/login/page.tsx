@@ -20,11 +20,17 @@ export default function LoginPage() {
     setIsLoading(true)
     setError(null)
     
-    const trimmedEmail = email.trim()
+    const trimmedEmail = email.trim().toLowerCase()
     const trimmedPassword = password.trim()
 
     if (!trimmedEmail || !trimmedPassword) {
       setError("Email and password are required.")
+      setIsLoading(false)
+      return
+    }
+
+    if (!trimmedEmail.includes('.') || !trimmedEmail.includes('@')) {
+      setError("Please enter a valid email format (e.g., user@gmail.com).")
       setIsLoading(false)
       return
     }
@@ -44,7 +50,12 @@ export default function LoginPage() {
             emailRedirectTo: `${window.location.origin}/auth/callback`
           }
         })
-        if (error) throw error
+        if (error) {
+          if (error.message.includes('valid email')) {
+            throw new Error("This email domain might be blocked. Please try a different one (e.g., @gmail.com).")
+          }
+          throw error
+        }
         alert("Account created! You can now log in.")
         setMode('login')
       }
