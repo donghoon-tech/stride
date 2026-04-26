@@ -1,11 +1,86 @@
 import { format } from 'date-fns'
 import { ActivityCard } from '../chat/ActivityCard'
 import { Activity } from '@/lib/llm/types'
-import { Trash2 } from 'lucide-react'
+import { MoreVertical, Pencil, Trash2 } from 'lucide-react'
 import { deleteActivity } from '@/app/actions/activity'
+import { useTransition } from 'react'
+import { toast } from 'sonner'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface RecentActivitiesProps {
   activities: Activity[]
+}
+
+function ActivityActions({ activityId }: { activityId: string }) {
+  const [isPending, startTransition] = useTransition()
+
+  const handleDelete = () => {
+    startTransition(async () => {
+      try {
+        await deleteActivity(activityId)
+        toast.success('Activity deleted successfully')
+      } catch (error) {
+        toast.error('Failed to delete activity')
+      }
+    })
+  }
+
+  return (
+    <div className={isPending ? 'opacity-50' : ''}>
+      <AlertDialog>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="p-1 text-gray-400 hover:text-black hover:bg-gray-100 rounded-md transition-colors opacity-50 group-hover:opacity-100">
+              <MoreVertical className="h-3.5 w-3.5" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem disabled>
+              <Pencil className="mr-2 h-4 w-4" />
+              <span>Edit</span>
+            </DropdownMenuItem>
+            <AlertDialogTrigger asChild>
+              <DropdownMenuItem className="text-red-600 focus:text-red-600">
+                <Trash2 className="mr-2 h-4 w-4" />
+                <span>Delete</span>
+              </DropdownMenuItem>
+            </AlertDialogTrigger>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Activity?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove this activity log. Your goal progress will be updated accordingly.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  )
 }
 
 export function RecentActivities({ activities }: RecentActivitiesProps) {
@@ -27,25 +102,13 @@ export function RecentActivities({ activities }: RecentActivitiesProps) {
               {format(new Date(activity.recorded_at), 'MMM d, yyyy h:mm a')}
             </div>
             
-            <form action={async () => {
-              'use server'
-              await deleteActivity(activity.id)
-            }} className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button 
-                type="submit"
-                className="p-1.5 bg-white/80 backdrop-blur-sm border border-gray-100 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg shadow-sm"
-                title="Delete Activity"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </form>
-
             <ActivityCard 
               activity={{
                 activity_type: activity.activity_type,
-                metrics: activity.metrics,
+                metrics: activity.metrics as Record<string, unknown>,
                 ai_confidence: 1.0 // Assumed confirmed if it's in the DB
               }}
+              actions={<ActivityActions activityId={activity.id} />}
             />
           </div>
         ))}

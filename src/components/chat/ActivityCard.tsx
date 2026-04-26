@@ -4,21 +4,25 @@ import { ParsedActivity } from '@/lib/llm/types'
 interface ActivityCardProps {
   activity: ParsedActivity
   onConfirm?: () => void
+  actions?: React.ReactNode
 }
 
-export function ActivityCard({ activity, onConfirm }: ActivityCardProps) {
+export function ActivityCard({ activity, onConfirm, actions }: ActivityCardProps) {
   const { activity_type, metrics, ai_confidence } = activity
 
   const isHighConfidence = ai_confidence >= 0.8
 
   return (
-    <Card className="w-full max-w-sm mt-2 mb-2 bg-white">
+    <Card className="w-full max-w-sm mt-2 mb-2 bg-white relative overflow-visible">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg flex justify-between items-center">
+        <CardTitle className="text-lg flex justify-between items-start">
           <span>{activity_type.charAt(0).toUpperCase() + activity_type.slice(1)}</span>
-          <span className="text-xs font-normal text-gray-500">
-            Confidence: {(ai_confidence * 100).toFixed(0)}%
-          </span>
+          <div className="flex flex-col items-end gap-1">
+            <span className="text-[10px] font-normal text-gray-500">
+              Confidence: {(ai_confidence * 100).toFixed(0)}%
+            </span>
+            {actions}
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent>
