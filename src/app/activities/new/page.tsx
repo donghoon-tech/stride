@@ -91,7 +91,17 @@ export default function NewActivityPage() {
 
             <div className="space-y-2">
               <label htmlFor="date" className="text-sm font-medium">Date & Time</label>
-              <Input id="date" name="date" type="datetime-local" defaultValue={new Date().toISOString().slice(0, 16)} required />
+              <Input 
+                id="date" 
+                name="date" 
+                type="datetime-local" 
+                defaultValue={(() => {
+                  const now = new Date();
+                  const offset = now.getTimezoneOffset() * 60000;
+                  return new Date(now.getTime() - offset).toISOString().slice(0, 16);
+                })()} 
+                required 
+              />
             </div>
             
             {isUniversalMetric ? (
