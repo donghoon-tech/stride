@@ -6,6 +6,7 @@ import { RecentActivities } from '@/components/dashboard/RecentActivities'
 import { ActivityHeatmap } from '@/components/dashboard/ActivityHeatmap'
 import { Activity, Goal } from '@/lib/llm/types'
 import { GoalCard } from '@/components/dashboard/GoalCard'
+import { SignOutButton } from '@/components/layout/SignOutButton'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -37,9 +38,12 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-white p-4 sm:p-8">
       <div className="max-w-5xl mx-auto space-y-12">
-        <header className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-gray-500">Welcome back! Here&apos;s your current progress.</p>
+        <header className="flex justify-between items-start">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-gray-500">Welcome back! Here&apos;s your current progress.</p>
+          </div>
+          <SignOutButton />
         </header>
 
         {/* Goals Section */}
