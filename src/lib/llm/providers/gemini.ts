@@ -12,7 +12,7 @@ const parseSchema: Schema = {
     },
     metrics: {
       type: Type.OBJECT,
-      description: "A flexible dictionary of metrics extracted. For running, might include distance_km (number), duration_min (number), pace_per_km (string), avg_hr (number), cadence (number), difficulty (1-10). For reading, might include pages_read. Parse numbers as numbers."
+      description: "A flexible dictionary of metrics extracted. For running, might include distance_km (number), duration_min (number). For reading, might include pages_read (delta) or checkpoint (absolute page number reached). Parse numbers as numbers."
     },
     ai_confidence: {
       type: Type.NUMBER,

@@ -107,8 +107,33 @@ export default function NewActivityPage() {
             {isUniversalMetric ? (
               <div className="space-y-2">
                 <input type="hidden" name="metric_name" value={metricName} />
-                <label htmlFor="metric_value" className="text-sm font-medium">How many {metricName}?</label>
-                <Input id="metric_value" name="metric_value" type="number" step="any" placeholder="e.g., 15" required />
+                {selectedGoal?.activity_type === 'reading' ? (
+                  <>
+                    <label htmlFor="checkpoint" className="text-sm font-medium">Which page did you read up to?</label>
+                    <Input 
+                      key={`checkpoint_${selectedGoalId}`}
+                      id="checkpoint" 
+                      name="checkpoint" 
+                      type="number" 
+                      placeholder={`Last: ${selectedGoal.current_progress?.last_checkpoint || selectedGoal.target?.start_value || 0}`} 
+                      required 
+                    />
+                    <p className="text-xs text-gray-500">The system will calculate the pages read from the previous checkpoint.</p>
+                  </>
+                ) : (
+                  <>
+                    <label htmlFor="metric_value" className="text-sm font-medium">How many {metricName}?</label>
+                    <Input 
+                      key={`metric_value_${selectedGoalId}`}
+                      id="metric_value" 
+                      name="metric_value" 
+                      type="number" 
+                      step="any" 
+                      placeholder="e.g., 15" 
+                      required 
+                    />
+                  </>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-4">

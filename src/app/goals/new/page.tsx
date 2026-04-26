@@ -84,6 +84,26 @@ export default function NewGoalPage() {
                   <Input id="target_time" name="target_time" type="number" placeholder="50" />
                 </div>
               </div>
+            ) : activityType === 'reading' ? (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label htmlFor="start_page" className="text-sm font-medium">Start Page</label>
+                  <Input 
+                    key={`start_page_${activityType}`}
+                    id="start_page" 
+                    name="start_page" 
+                    type="number" 
+                    placeholder="1" 
+                    defaultValue="1" 
+                    required 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="end_page" className="text-sm font-medium">End Page (Target)</label>
+                  <Input id="end_page" name="end_page" type="number" placeholder="300" required />
+                </div>
+                <input type="hidden" name="metric_name" value="pages" />
+              </div>
             ) : (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -92,8 +112,8 @@ export default function NewGoalPage() {
                     key={`metric_name_${activityType}`}
                     id="metric_name" 
                     name="metric_name" 
-                    placeholder={activityType === 'reading' ? 'pages' : 'e.g., laps'} 
-                    defaultValue={activityType === 'reading' ? 'pages' : ''}
+                    placeholder="e.g., laps" 
+                    defaultValue=""
                     required 
                   />
                 </div>

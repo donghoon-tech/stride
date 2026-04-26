@@ -28,11 +28,17 @@ export async function processUserMessage(message: string) {
 
       const goal_id = activeGoals && activeGoals.length > 0 ? activeGoals[0].id : null
 
-      // Fallback for legacy DB triggers
+      // Ensure metrics include checkpoint if provided by AI
       const metricsToSave = { ...parsed.metrics };
+      
+      // Fallback for legacy DB triggers or ensuring metric consistency
       if (parsed.activity_type === 'reading') {
-        const fallbackValue = Object.values(metricsToSave)[0] || 0;
-        metricsToSave['pages_read'] = metricsToSave['pages_read'] ?? fallbackValue;
+        if (metricsToSave.checkpoint) {
+          metricsToSave['pages'] = metricsToSave['pages'] ?? 0; // Trigger will calculate delta
+        } else {
+          const fallbackValue = Object.values(metricsToSave)[0] || 0;
+          metricsToSave['pages'] = metricsToSave['pages'] ?? metricsToSave['pages_read'] ?? fallbackValue;
+        }
       }
 
       // Save directly to activities table

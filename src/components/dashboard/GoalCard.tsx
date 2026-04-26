@@ -149,7 +149,22 @@ export function GoalCard({ goal, activities }: GoalCardProps) {
       </div>
       
       <div className="space-y-2 text-sm text-gray-600">
-        {Boolean(metricName) ? (
+        {goal.activity_type === 'reading' && goal.target?.end_value ? (
+          <>
+            <div className="flex justify-between">
+              <span>Target Range:</span>
+              <span className="font-medium text-gray-900">{String(goal.target.start_value)} → {String(goal.target.end_value)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Current Position:</span>
+              <span className="font-medium text-gray-900">Page {String(goal.current_progress?.last_checkpoint || goal.target.start_value)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Pages Read:</span>
+              <span className="font-medium text-gray-900">{currentVal} / {targetVal} pages</span>
+            </div>
+          </>
+        ) : Boolean(metricName) ? (
           <>
             <div className="flex justify-between">
               <span>Target {metricName}:</span>

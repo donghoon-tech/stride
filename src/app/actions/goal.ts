@@ -25,11 +25,29 @@ export async function createGoal(formData: FormData): Promise<void> {
   const metricName = formData.get('metric_name') as string
   const targetValue = formData.get('target_value') as string
 
+  // Specialized Reading fields
+  const startPage = formData.get('start_page') as string
+  const endPage = formData.get('end_page') as string
+
   let target: Record<string, any> = {};
   let current_progress: Record<string, any> | undefined = undefined;
 
-  // Handle universal metrics first
-  if (metricName && targetValue) {
+  // Handle specialized reading first
+  if (activity_type === 'reading' && startPage && endPage) {
+    const start = Number(startPage);
+    const end = Number(endPage);
+    target = {
+      metric_name: 'pages',
+      start_value: start,
+      end_value: end,
+      target_value: Math.abs(end - start)
+    };
+    current_progress = { 
+      pages: 0,
+      last_checkpoint: start
+    };
+  } else if (metricName && targetValue) {
+    // Handle universal metrics
     target = {
       metric_name: metricName,
       target_value: Number(targetValue)

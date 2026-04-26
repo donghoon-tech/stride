@@ -25,10 +25,16 @@ export async function createManualActivity(formData: FormData): Promise<void> {
   // Universal fields
   const metricName = formData.get('metric_name') as string
   const metricValue = formData.get('metric_value') as string
+  const checkpoint = formData.get('checkpoint') as string
 
   let metrics: Record<string, any> = {};
 
-  if (metricName && metricValue) {
+  if (checkpoint) {
+    metrics.checkpoint = Number(checkpoint);
+    if (metricName) {
+      metrics[metricName] = 0; // Trigger will calculate this delta
+    }
+  } else if (metricName && metricValue) {
     metrics[metricName] = Number(metricValue);
   } else {
     metrics = {
