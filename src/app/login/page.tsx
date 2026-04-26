@@ -20,20 +20,33 @@ export default function LoginPage() {
     setIsLoading(true)
     setError(null)
     
+    const trimmedEmail = email.trim()
+    const trimmedPassword = password.trim()
+
+    if (!trimmedEmail || !trimmedPassword) {
+      setError("Email and password are required.")
+      setIsLoading(false)
+      return
+    }
+    
     try {
       if (mode === 'login') {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        const { error } = await supabase.auth.signInWithPassword({ 
+          email: trimmedEmail, 
+          password: trimmedPassword 
+        })
         if (error) throw error
       } else {
         const { error } = await supabase.auth.signUp({ 
-          email, 
-          password,
+          email: trimmedEmail, 
+          password: trimmedPassword,
           options: {
             emailRedirectTo: `${window.location.origin}/auth/callback`
           }
         })
         if (error) throw error
-        alert("Check your email for the confirmation link!")
+        alert("Account created! You can now log in.")
+        setMode('login')
       }
       router.push('/dashboard')
       router.refresh()
